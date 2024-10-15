@@ -30,7 +30,7 @@ import Search from "../pages/Search";
 const Header = ({ darkMode, handleThemeToggle }) => {
   const { user, isAuthorized, setIsAuthorized, setUser } = useContext(Context);
   // console.log("User------>", user);
-  const userId = user._id;
+  const userId = user?._id;
   // console.log("Frontend id-->", userId);
 
   const theme = useTheme();

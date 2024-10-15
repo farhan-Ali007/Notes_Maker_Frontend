@@ -49,8 +49,9 @@ const App = () => {
           setLoading(false);
           return;
         }
+
         const response = await axios.get(
-          "http://localhost:3500/api/user/current",
+`          "http://localhost:3500/api/user/current`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

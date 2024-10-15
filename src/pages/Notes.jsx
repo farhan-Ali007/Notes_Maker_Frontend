@@ -206,7 +206,7 @@ const Notes = ({ darkMode }) => {
             xs: "center",
             sm: "space-between",
             md: "space-between",
-            lg: "space-betweeen",
+            lg: "center",
           },
           gap: 3,
         }}
