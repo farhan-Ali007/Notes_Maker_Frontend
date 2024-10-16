@@ -49,7 +49,6 @@ const App = () => {
           setLoading(false);
           return;
         }
-
         const response = await axios.get(
 `          "http://localhost:3500/api/user/current`,
           {

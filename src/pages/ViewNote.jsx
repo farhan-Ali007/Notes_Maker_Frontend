@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Card,
   CardMedia,
   Chip,
@@ -12,6 +13,8 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Loader from "../styles/Loader";
+import jsPDF from "jspdf";
+import { white } from "../styles/Styled";
 
 const ViewNote = ({ darkMode }) => {
   const { id } = useParams();
@@ -59,7 +62,80 @@ const ViewNote = ({ darkMode }) => {
   }
 
   const removeImageTags = (html) => {
-    return html.replace(/<img[^>]*>/g, ""); 
+    return html.replace(/<img[^>]*>/g, "");
+  };
+
+  // Function to download note as PDF
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text(note.title, 10, 10); // Title
+    doc.setFontSize(12);
+    doc.text(`Author: ${note.author.username}`, 10, 20); // Author
+    doc.text(
+      `Created At: ${new Date(note.createdAt).toLocaleDateString()}`,
+      10,
+      30
+    ); // Date
+    doc.text("Content:", 10, 40); // Content Header
+
+    // Clean content for PDF
+    const content = removeImageTags(note.content).replace(/<br\s*\/?>/gi, "\n");
+    const splitContent = doc.splitTextToSize(content, 180); // Split text to fit PDF width
+    let yPosition = 50; // Initial y position for content
+
+    // Add content to PDF
+    doc.text(splitContent, 10, yPosition); // Add content to PDF
+    yPosition += splitContent.length * 6; // Adjust y position for the next content
+
+    // Adding images if they exist
+    if (note.images && note.images.length > 0) {
+      note.images.forEach((image, index) => {
+        // Load the image
+        const img = new Image();
+        img.src = image.url;
+
+        img.onload = function () {
+          // Set maximum dimensions for images
+          const maxWidth = 180; // Maximum width for images
+          const maxHeight = 100; // Maximum height for images
+
+          // Calculate the new dimensions while maintaining the aspect ratio
+          let width = img.width;
+          let height = img.height;
+
+          // Calculate the aspect ratio
+          const aspectRatio = width / height;
+
+          // Adjust dimensions based on the maximum constraints
+          if (width > maxWidth) {
+            width = maxWidth;
+            height = maxWidth / aspectRatio; // Maintain aspect ratio
+          }
+          if (height > maxHeight) {
+            height = maxHeight;
+            width = maxHeight * aspectRatio; // Maintain aspect ratio
+          }
+
+          // Add image to PDF with calculated dimensions
+          doc.addImage(img, "JPEG", 10, yPosition, width, height); // Adjust positioning and size as needed
+          yPosition += height + 10; // Increment y position for the next image (with some spacing)
+
+          // Check if we need to add a new page for content overflow
+          if (yPosition + 10 > doc.internal.pageSize.height) {
+            doc.addPage(); // Add a new page if overflow
+            yPosition = 10; // Reset y position
+          }
+
+          // Save the PDF after all images are added
+          if (index === note.images.length - 1) {
+            doc.save(`${note.title}.pdf`); // Save the PDF
+          }
+        };
+      });
+    } else {
+      doc.save(`${note.title}.pdf`); // Save the PDF if no images
+    }
   };
 
   return (
@@ -186,6 +262,32 @@ const ViewNote = ({ darkMode }) => {
           >
             Author: {note.author.username}
           </Typography>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={downloadPDF}
+            sx={{
+              textTransform: "capitalize",
+              padding: {
+                xs: "8px 16px",
+                sm: "10px 20px",
+                md: "12px 24px",
+              },
+              fontSize: {
+                xs: "0.8rem",
+                sm: "1rem",
+                md: "1.125rem",
+              },
+              ":hover": {
+                color: "white",
+                background: theme.palette.text.primary,
+              },
+              marginRight:"1rem"
+            }}
+          >
+            Download as PDF
+          </Button>
+
           <Typography variant="body2" color={theme.palette.text.primary}>
             Created At: {new Date(note.createdAt).toLocaleDateString()}
           </Typography>
